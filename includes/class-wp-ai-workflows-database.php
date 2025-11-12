@@ -10,7 +10,7 @@ class WP_AI_Workflows_Database {
 
     public static function create_tables() {
         $current_version = get_option('wp_ai_workflows_db_version', '0');
-        if (version_compare($current_version, WP_AI_WORKFLOWS_PRO_VERSION, '>=')) {
+        if (version_compare($current_version, WP_AI_WORKFLOWS_VERSION, '>=')) {
             return; // Database is up to date
         }
 
@@ -31,7 +31,6 @@ class WP_AI_Workflows_Database {
         $assistant_messages_table = $wpdb->prefix . 'wp_ai_workflows_assistant_messages';
         $vector_stores_table = $wpdb->prefix . 'wp_ai_workflows_vector_stores';
         $vector_files_table = $wpdb->prefix . 'wp_ai_workflows_vector_files';
-        $license_security_table = $wpdb->prefix . 'wp_ai_workflows_license_security';
         $workflows_table = $wpdb->prefix . 'wp_ai_workflows_workflow_data';
         $mcp_servers_table = $wpdb->prefix . 'wp_ai_workflows_mcp_servers';
 
@@ -48,23 +47,6 @@ class WP_AI_Workflows_Database {
             KEY status (status),
             KEY created_at (created_at),
             KEY updated_at (updated_at)
-        ) $charset_collate;";
-
-        $sql_license_security = "CREATE TABLE IF NOT EXISTS $license_security_table (
-            id BIGINT(20) NOT NULL AUTO_INCREMENT,
-            check_time DATETIME NOT NULL,
-            check_type VARCHAR(50) NOT NULL,
-            ip_address VARCHAR(100) NOT NULL,
-            result VARCHAR(20) NOT NULL,
-            license_key_fragment VARCHAR(32),
-            site_hash VARCHAR(64) NOT NULL,
-            http_filter_status TINYINT(1) DEFAULT 0,
-            details TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY check_time (check_time),
-            KEY result (result),
-            KEY site_hash (site_hash)
         ) $charset_collate;";
 
         $sql_shortcode_outputs = "CREATE TABLE IF NOT EXISTS $shortcode_outputs_table (
@@ -286,10 +268,9 @@ class WP_AI_Workflows_Database {
         dbDelta($sql_assistant_messages);
         dbDelta($sql_vector_stores);
         dbDelta($sql_vector_files);
-        dbDelta($sql_license_security);
         dbDelta($sql_mcp_servers);
 
-        update_option('wp_ai_workflows_chat_db_version', WP_AI_WORKFLOWS_PRO_VERSION);
+        update_option('wp_ai_workflows_chat_db_version', WP_AI_WORKFLOWS_VERSION);
 
         WP_AI_Workflows_Utilities::debug_log("Database tables created or updated", "info");
     }
@@ -542,7 +523,7 @@ class WP_AI_Workflows_Database {
         }
     
         if ($tables_created || $columns_added) {
-            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_PRO_VERSION);
+            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_VERSION);
         }
     }
 
@@ -577,7 +558,7 @@ class WP_AI_Workflows_Database {
     public static function update_chat_schema() {
         $current_version = get_option('wp_ai_workflows_chat_db_version', '0');
         
-        if (version_compare($current_version, WP_AI_WORKFLOWS_PRO_VERSION, '<')) {
+        if (version_compare($current_version, WP_AI_WORKFLOWS_VERSION, '<')) {
             self::create_chat_tables();
         }
     }
@@ -603,9 +584,8 @@ class WP_AI_Workflows_Database {
             'wp_ai_workflows_node_costs',
             'wp_ai_workflows_vector_stores',
             'wp_ai_workflows_vector_files',
-            'wp_ai_workflows_license_security',
             'wp_ai_workflows_workflow_data',
-            'wp_ai_workflows_mcp_servers', 
+            'wp_ai_workflows_mcp_servers',
 
         ];
     
@@ -743,23 +723,6 @@ class WP_AI_Workflows_Database {
                     PRIMARY KEY (id),
                     KEY store_id (store_id)
                 ) {$wpdb->get_charset_collate()};",
-            'wp_ai_workflows_license_security' => "
-                CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp_ai_workflows_license_security (
-                    id BIGINT(20) NOT NULL AUTO_INCREMENT,
-                    check_time DATETIME NOT NULL,
-                    check_type VARCHAR(50) NOT NULL,
-                    ip_address VARCHAR(100) NOT NULL,
-                    result VARCHAR(20) NOT NULL,
-                    license_key_fragment VARCHAR(32),
-                    site_hash VARCHAR(64) NOT NULL,
-                    http_filter_status TINYINT(1) DEFAULT 0,
-                    details TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (id),
-                    KEY check_time (check_time),
-                    KEY result (result),
-                    KEY site_hash (site_hash)
-                ) {$wpdb->get_charset_collate()};",
             'wp_ai_workflows_workflow_data' => "
                 CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp_ai_workflows_workflow_data (
                     id VARCHAR(255) NOT NULL,
@@ -836,7 +799,7 @@ class WP_AI_Workflows_Database {
         }
     
         if ($tables_created) {
-            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_PRO_VERSION);
+            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_VERSION);
         }
     
         return $tables_created;

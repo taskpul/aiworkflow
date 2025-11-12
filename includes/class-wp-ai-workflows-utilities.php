@@ -198,8 +198,7 @@ class WP_AI_Workflows_Utilities {
             
             WP_AI_Workflows_Utilities::debug_log("Settings retrieved successfully", "debug", [
                 'selected_models' => $response_settings['selected_models'],
-                'license_status' => $response_settings['license_status'],
-                'license_key_masked' => !empty($license_key) && $license_status === 'active'
+                'analytics_opt_out' => $response_settings['analytics_opt_out'],
             ]);
             
             return new WP_REST_Response($response_settings, 200);

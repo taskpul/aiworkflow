@@ -40,14 +40,14 @@ class WP_AI_Workflows_Chat_Embedder {
         wp_register_script('wp-ai-workflows-app',
             plugins_url('build/static/js/' . $js_file, WP_AI_WORKFLOWS_PLUGIN_DIR . 'wp-ai-workflows.php'),
             array(),
-            WP_AI_WORKFLOWS_PRO_VERSION,
+            WP_AI_WORKFLOWS_VERSION,
             true
         );
     
         wp_register_style('wp-ai-workflows-app',
             plugins_url('build/static/css/' . $css_file, WP_AI_WORKFLOWS_PLUGIN_DIR . 'wp-ai-workflows.php'),
             array(),
-            WP_AI_WORKFLOWS_PRO_VERSION
+            WP_AI_WORKFLOWS_VERSION
         );
     
         // Different settings for frontend vs admin

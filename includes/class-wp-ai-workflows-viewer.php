@@ -57,7 +57,7 @@ class WP_AI_Workflows_Viewer {
                 'wp-ai-workflows-viewer',
                 WP_AI_WORKFLOWS_PLUGIN_URL . 'build/static/js/' . basename($js_files[0]),
                 array('react', 'react-dom'), 
-                WP_AI_WORKFLOWS_PRO_VERSION,
+                WP_AI_WORKFLOWS_VERSION,
                 true
             );
     
@@ -76,7 +76,7 @@ class WP_AI_Workflows_Viewer {
                 'wp-ai-workflows-viewer',
                 WP_AI_WORKFLOWS_PLUGIN_URL . 'build/static/css/' . basename($css_files[0]),
                 array(),
-                WP_AI_WORKFLOWS_PRO_VERSION
+                WP_AI_WORKFLOWS_VERSION
             );
         }
     

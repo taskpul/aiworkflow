@@ -18,8 +18,8 @@ class WP_AI_Workflows_Admin {
 
         $icon_url = WP_AI_WORKFLOWS_PLUGIN_URL . 'images/AWAIcon.png';
         add_menu_page(
-            'AI Workflows Lite',
-            'AI Workflows Lite',
+            'AI Workflow Automation',
+            'AI Workflows',
             $capability,
             'wp-ai-workflows',
             array($this, 'render_app'),
@@ -41,7 +41,7 @@ class WP_AI_Workflows_Admin {
                 'wp-ai-workflows-app',
                 WP_AI_WORKFLOWS_PLUGIN_URL . 'build/static/js/' . basename($js_files[0]),
                 array(),
-                WP_AI_WORKFLOWS_LITE_VERSION,
+                WP_AI_WORKFLOWS_VERSION,
                 true
             );
         }
@@ -51,7 +51,7 @@ class WP_AI_Workflows_Admin {
                 'wp-ai-workflows-app',
                 WP_AI_WORKFLOWS_PLUGIN_URL . 'build/static/css/' . basename($css_files[0]),
                 array(),
-                WP_AI_WORKFLOWS_LITE_VERSION
+                WP_AI_WORKFLOWS_VERSION
             );
         }
 
@@ -111,7 +111,7 @@ class WP_AI_Workflows_Admin {
             'page' => $current_page,
             'workflowData' => $workflow_data,
             'installation_id' => get_option('wp_ai_workflows_installation_id'),
-            'isLiteVersion' => true
+            'isLiteVersion' => false
         );
         
         wp_localize_script('wp-ai-workflows-app', 'wpAiWorkflowsSettings', $settings);
@@ -125,8 +125,7 @@ class WP_AI_Workflows_Admin {
         echo '<div id="wp-ai-workflows-root"></div>';
 
         echo '<div style="text-align: center; margin-top: 20px; padding: 10px; border-top: 1px solid #ccc;">';
-        echo '&copy; ' . esc_html(gmdate('Y')) . ' WP AI Workflows Lite. All rights reserved. ';
-        echo '<a href="https://wpaiworkflowautomation.com/#pricing" target="_blank">Upgrade to Pro</a>';
+        echo '&copy; ' . esc_html(gmdate('Y')) . ' WP AI Workflows. All rights reserved.';
         echo '</div>';
     }
 }

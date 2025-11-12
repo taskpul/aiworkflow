@@ -1,8 +1,8 @@
 <?php
 /*
- * Plugin Name: AI Workflow Automation Lite
+ * Plugin Name: AI Workflow Automation
  * Plugin URI: https://wpaiworkflowautomation.com
- * Description: Build AI-powered workflows with a visual interface. Free version with essential features.
+ * Description: Build AI-powered workflows with a visual interface.
  * Version: 1.4.2
  * Requires at least: 6.0.0
  * Requires PHP: 8.0.0
@@ -30,14 +30,12 @@ function wp_ai_workflows_handle_error($errno, $errstr, $errfile, $errline) {
 set_error_handler('wp_ai_workflows_handle_error');
 
 // Define constants
-define('WP_AI_WORKFLOWS_LITE_VERSION', '1.4.2');
-define('WP_AI_WORKFLOWS_PRO_VERSION', '1.7.1'); // For compatibility
+define('WP_AI_WORKFLOWS_VERSION', '1.4.2');
 define('WP_AI_WORKFLOWS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WP_AI_WORKFLOWS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WP_AI_WORKFLOWS_PLUGIN_FILE', __FILE__);
 define('WP_AI_WORKFLOWS_DEBUG', true);
-define('WP_AI_WORKFLOWS_LITE_BASENAME', plugin_basename(__FILE__));
-define('WP_AI_WORKFLOWS_PRO_BASENAME', plugin_basename(__FILE__)); // For compatibility
+define('WP_AI_WORKFLOWS_PLUGIN_BASENAME', plugin_basename(__FILE__));
 define('WP_AI_WORKFLOWS_DB_VERSION_OPTION', 'wp_ai_workflows_db_version');
 define('WP_AI_WORKFLOWS_DB_CHARSET', 'utf8mb4');
 define('WP_AI_WORKFLOWS_DB_COLLATE', 'utf8mb4_unicode_ci');
@@ -112,7 +110,7 @@ function activate_wp_ai_workflows() {
         WP_AI_Workflows_Utilities::debug_log("Starting plugin activation", "info", [
             'php_version' => PHP_VERSION,
             'wp_version' => get_bloginfo('version'),
-            'plugin_version' => WP_AI_WORKFLOWS_LITE_VERSION,
+            'plugin_version' => WP_AI_WORKFLOWS_VERSION,
             'memory_limit' => ini_get('memory_limit'),
             'max_execution_time' => ini_get('max_execution_time'),
             'active_plugins' => get_option('active_plugins'),
@@ -125,7 +123,7 @@ function activate_wp_ai_workflows() {
         WP_AI_Workflows_Utilities::generate_and_encrypt_api_key();
         wp_ai_workflows_schedule_cleanup_cron();
         delete_option('wp_ai_workflows_human_tasks_db_version');
-        update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_LITE_VERSION);
+        update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_VERSION);
         wp_ai_workflows_setup_files();
 
         // Initialize cost settings
@@ -225,7 +223,7 @@ function run_wp_ai_workflows() {
             new WP_AI_Workflows_REST_API(),
             new WP_AI_Workflows_Admin(),
             new WP_AI_Workflows_Database(),
-            new WP_AI_Workflows_Analytics_Collector(WP_AI_WORKFLOWS_LITE_VERSION, false), // false = Lite version
+            new WP_AI_Workflows_Analytics_Collector(WP_AI_WORKFLOWS_VERSION),
         ];
 
         foreach ($components as $component) {
@@ -236,16 +234,7 @@ function run_wp_ai_workflows() {
             WP_AI_Workflows_Encryption::init();
         }
 
-        // Initialize all functionality for Lite version
         initialize_full_functionality();
-
-        // Add Lite version indicator to frontend settings
-        add_filter('wp_ai_workflows_frontend_settings', function($settings) {
-            $settings['version'] = 'lite';
-            $settings['license_active'] = false; // Always false for Lite
-            $settings['upgrade_url'] = 'https://wpaiworkflowautomation.com/pricing?utm_source=lite&utm_medium=plugin';
-            return $settings;
-        });
 
         $output = ob_get_clean();
         if (!empty($output)) {
@@ -307,9 +296,6 @@ function initialize_full_functionality() {
             new WP_AI_Workflows_Vector_Store();
         }
 
-        // Add Lite version upgrade notice
-        add_action('admin_notices', 'wp_ai_workflows_lite_upgrade_notice');
-
         $output = ob_get_clean();
         if (!empty($output)) {
             error_log('WP AI Workflows full initialization output: ' . $output);
@@ -352,30 +338,30 @@ add_action('init', function() {
     }
 });
 add_action('wp_ai_workflows_cleanup_chat_data', ['WP_AI_Workflows_Database', 'cleanup_old_chat_data']);
-add_action('wp_ai_workflows_cleanup_assistant_chat', array('WP_AI_Workflows_Assistant_Setup', 'cleanup_old_data'));
+if (class_exists('WP_AI_Workflows_Assistant_Setup')) {
+    add_action('wp_ai_workflows_cleanup_assistant_chat', array('WP_AI_Workflows_Assistant_Setup', 'cleanup_old_data'));
+}
 add_action('wp_ai_workflows_daily_maintenance', array('WP_AI_Workflows_Assistant_Chat', 'cleanup_old_data'));
 
 /**
- * Plugin update check - Lite version internal updates only
+ * Plugin update check - unified edition updates
  */
 function wp_ai_workflows_update_check() {
     ob_start();
     try {
-        // Use lite-specific option to track version
-        $current_version = get_option('wp_ai_workflows_lite_version', '0');
+        $current_version = get_option('wp_ai_workflows_version', '0');
         $current_db_version = get_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, '0');
-        
-        if (version_compare($current_version, WP_AI_WORKFLOWS_LITE_VERSION, '<')) {
-            // Handle plugin version update
+
+        if (version_compare($current_version, WP_AI_WORKFLOWS_VERSION, '<')) {
             if ($current_version === '0') {
                 activate_wp_ai_workflows();
             }
-            update_option('wp_ai_workflows_lite_version', WP_AI_WORKFLOWS_LITE_VERSION);
+            update_option('wp_ai_workflows_version', WP_AI_WORKFLOWS_VERSION);
         }
-        
+
         // Always verify and update database schema
         WP_AI_Workflows_Database::update_database_schema();
-        
+
         // Initialize cost settings if needed
         if (class_exists('WP_AI_Workflows_Cost_Management')) {
             $cost_settings = WP_AI_Workflows_Cost_Management::get_instance()->get_cost_settings();
@@ -383,13 +369,12 @@ function wp_ai_workflows_update_check() {
                 WP_AI_Workflows_Cost_Management::get_instance()->initialize_cost_settings();
             }
         }
-        
-        // Update DB version if necessary
-        if (version_compare($current_db_version, WP_AI_WORKFLOWS_LITE_VERSION, '<')) {
-            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_LITE_VERSION);
+
+        if (version_compare($current_db_version, WP_AI_WORKFLOWS_VERSION, '<')) {
+            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_VERSION);
             WP_AI_Workflows_Utilities::debug_log("Database updated", "info", [
                 'from_version' => $current_db_version,
-                'to_version' => WP_AI_WORKFLOWS_LITE_VERSION
+                'to_version' => WP_AI_WORKFLOWS_VERSION
             ]);
         }
     } catch (Exception $e) {
@@ -409,7 +394,7 @@ function wp_ai_workflows_activate_or_update() {
     try {
         WP_AI_Workflows_Database::create_tables();
         WP_AI_Workflows_Database::update_database_schema();
-        update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_LITE_VERSION);
+        update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_VERSION);
         
         if (class_exists('WP_AI_Workflows_Human_Tasks')) {
             $human_tasks = new WP_AI_Workflows_Human_Tasks();
@@ -436,16 +421,16 @@ add_action('plugins_loaded', function() {
         $current_version = get_option('wp_ai_workflows_version');
         $current_db_version = get_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION);
         
-        if ($current_version !== WP_AI_WORKFLOWS_LITE_VERSION || 
-            $current_db_version !== WP_AI_WORKFLOWS_LITE_VERSION) {
+        if ($current_version !== WP_AI_WORKFLOWS_VERSION ||
+            $current_db_version !== WP_AI_WORKFLOWS_VERSION) {
             
             // Force DB structure check
             delete_option('wp_ai_workflows_human_tasks_db_version');
             wp_ai_workflows_activate_or_update();
             
             // Update versions
-            update_option('wp_ai_workflows_version', WP_AI_WORKFLOWS_LITE_VERSION);
-            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_LITE_VERSION);
+            update_option('wp_ai_workflows_version', WP_AI_WORKFLOWS_VERSION);
+            update_option(WP_AI_WORKFLOWS_DB_VERSION_OPTION, WP_AI_WORKFLOWS_VERSION);
             
             WP_AI_Workflows_Utilities::debug_log(
                 "Plugin and database updated", 
@@ -453,7 +438,7 @@ add_action('plugins_loaded', function() {
                 [
                     'old_version' => $current_version,
                     'old_db_version' => $current_db_version,
-                    'new_version' => WP_AI_WORKFLOWS_LITE_VERSION
+                    'new_version' => WP_AI_WORKFLOWS_VERSION
                 ]
             );
         }
@@ -590,31 +575,6 @@ function wp_ai_workflows_migration_result_notice() {
     }
 }
 add_action('admin_notices', 'wp_ai_workflows_migration_result_notice');
-
-/**
- * Lite version upgrade notice
- */
-function wp_ai_workflows_lite_upgrade_notice() {
-    $screen = get_current_screen();
-    if ($screen && strpos($screen->id, 'wp-ai-workflows') !== false && !get_transient('wp_ai_workflows_lite_notice_dismissed')) {
-        ?>
-        <div class="notice notice-info is-dismissible" id="wp-ai-workflows-lite-upgrade-notice">
-            <p><strong>Upgrade to Pro:</strong> Unlock advanced features like email automation, webhooks, premium AI models, conditional logic, human input workflows, and more!</p>
-            <p>
-                <a href="https://wpaiworkflowautomation.com/pricing?utm_source=lite&utm_medium=notice" target="_blank" class="button button-primary">View Pro Features</a>
-                <a href="#" class="button" onclick="jQuery('#wp-ai-workflows-lite-upgrade-notice').fadeOut(); jQuery.post(ajaxurl, {action: 'dismiss_lite_notice', _wpnonce: '<?php echo wp_create_nonce('dismiss_lite_notice'); ?>'}); return false;">Dismiss</a>
-            </p>
-        </div>
-        <?php
-    }
-}
-
-// Handle notice dismissal
-add_action('wp_ajax_dismiss_lite_notice', function() {
-    check_ajax_referer('dismiss_lite_notice', '_wpnonce');
-    set_transient('wp_ai_workflows_lite_notice_dismissed', true, WEEK_IN_SECONDS);
-    wp_die();
-});
 
 // Run the plugin
 run_wp_ai_workflows();
