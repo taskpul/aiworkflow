@@ -626,21 +626,6 @@ class WP_AI_Workflows_REST_API {
             'permission_callback' => array($this, 'authorize_request')
         ));
 
-        // Register endpoint to check agency license
-
-
-        // Register endpoint to get whitelabel settings
-
-
-        // Register endpoint to update whitelabel settings
-
-
-        // Register endpoint to upload logo
-
-
-        // Register endpoint to import whitelabel settings
-
-
         register_rest_route('wp-ai-workflows/v1', '/openrouter-models', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_openrouter_models'),
@@ -659,19 +644,6 @@ class WP_AI_Workflows_REST_API {
 
 
     public function authorize_request($request) {
-
-        // Allow access to license-related endpoints without license check
-        $license_endpoints = [
-            '/wp-ai-workflows/v1/activate-license',
-            '/wp-ai-workflows/v1/deactivate-license',
-            '/wp-ai-workflows/v1/check-license',
-            '/wp-ai-workflows/v1/settings'
-        ];
-
-        if (in_array($request->get_route(), $license_endpoints)) {
-            return true;
-        }
-
 
         if (strpos($request->get_route(), '/wp-ai-workflows/v1/firecrawl/') === 0) {
             $settings = get_option('wp_ai_workflows_settings', array());
@@ -884,10 +856,7 @@ class WP_AI_Workflows_REST_API {
         $response = WP_AI_Workflows_Utilities::update_settings($request);
         
         $settings = $request->get_json_params();
-        if (isset($settings['license_key'])) {
-            $license = new WP_AI_Workflows_License();
-            $license->activate_license($settings['license_key']);
-        }
+        // No license activation required in the unified edition
     
         return $response;
     }
@@ -3799,16 +3768,14 @@ class WP_AI_Workflows_REST_API {
      * Handle logo upload
      */
     public function handle_logo_upload($request) {
-        $whitelabel = new WP_AI_Workflows_Whitelabel();
-        
-        // Check if user has agency license
-        if (!$whitelabel->is_agency_license()) {
+        if (!class_exists('WP_AI_Workflows_Whitelabel')) {
             return new WP_REST_Response(array(
                 'success' => false,
-                'message' => 'Agency license required for whitelabeling'
-            ), 403);
+                'message' => 'Whitelabel functionality is not available in this build.'
+            ), 501);
         }
-        
+
+        $whitelabel = new WP_AI_Workflows_Whitelabel();
         $result = $whitelabel->handle_logo_upload($request);
         
         if (isset($result['success']) && $result['success']) {
@@ -3822,16 +3789,14 @@ class WP_AI_Workflows_REST_API {
      * Import whitelabel settings
      */
     public function import_whitelabel_settings($request) {
-        $whitelabel = new WP_AI_Workflows_Whitelabel();
-        
-        // Check if user has agency license
-        if (!$whitelabel->is_agency_license()) {
+        if (!class_exists('WP_AI_Workflows_Whitelabel')) {
             return new WP_REST_Response(array(
                 'success' => false,
-                'message' => 'Agency license required for whitelabeling'
-            ), 403);
+                'message' => 'Whitelabel functionality is not available in this build.'
+            ), 501);
         }
-        
+
+        $whitelabel = new WP_AI_Workflows_Whitelabel();
         $result = $whitelabel->import_whitelabel_settings($request);
         
         if (isset($result['success']) && $result['success']) {

@@ -1,14 +1,12 @@
 <?php
 class WP_AI_Workflows_Analytics_Collector {
     private $plugin_version;
-    private $is_pro;
     private $analytics_endpoint = 'https://wpaiworkflows.com/wp-json/wp-ai-workflows-analytics/v1/collect';
     private $plugin_basename;
 
-    public function __construct($version, $is_pro = false) {
+    public function __construct($version) {
         $this->plugin_version = $version;
-        $this->is_pro = $is_pro;
-        $this->plugin_basename = $is_pro ? WP_AI_WORKFLOWS_PRO_BASENAME : WP_AI_WORKFLOWS_LITE_BASENAME;
+        $this->plugin_basename = WP_AI_WORKFLOWS_PLUGIN_BASENAME;
     }
 
     public function init() {
@@ -151,7 +149,6 @@ class WP_AI_Workflows_Analytics_Collector {
             array('installation_id' => $installation_id),
             $site_data,
             array(
-                'is_pro' => $this->is_pro,
                 'metrics' => $metrics,
                 'settings' => $this->get_sanitized_settings(),
                 'timestamp' => current_time('mysql')
@@ -178,7 +175,6 @@ class WP_AI_Workflows_Analytics_Collector {
             array(
                 'installation_id' => $installation_id,
                 'event' => $event_type,
-                'is_pro' => $this->is_pro,
                 'plugin_version' => $this->plugin_version,
                 'timestamp' => current_time('mysql')
             ),

@@ -35,7 +35,7 @@ class WP_AI_Workflows_Shortcode {
         $session_id = $this->get_session_id($atts);
     
         // Force refresh of assets by adding version timestamp
-        $version = WP_AI_WORKFLOWS_PRO_VERSION . '.' . time();
+        $version = WP_AI_WORKFLOWS_VERSION . '.' . time();
         
         wp_enqueue_style(
             'wp-ai-workflows-shortcode', 
